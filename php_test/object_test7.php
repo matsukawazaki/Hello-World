@@ -3,6 +3,8 @@
 <link rel='stylesheet' href='style.css'>
 
 <body>
+/*  git commit したよ */
+
 <?php
   function make_rptype(){
     $str = "<label>種類</label>";
