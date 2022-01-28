@@ -3,7 +3,7 @@
 <link rel='stylesheet' href='style.css'>
 
 <body>
-
+/* ブラウザ上で編集してみた */
 <?php
   function make_rptype(){
     $str = "<label>種類</label>";
