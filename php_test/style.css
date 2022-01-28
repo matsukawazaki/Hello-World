@@ -1,0 +1,17 @@
+body {
+  background: blue;
+}
+
+td {
+  border:solid 1px black;
+  padding: 5px;
+}
+
+.mouseover {
+  background:pink;
+}
+
+.undisplay {
+  display:none;
+}
+
