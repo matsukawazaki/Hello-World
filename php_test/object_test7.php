@@ -3,7 +3,6 @@
 <link rel='stylesheet' href='style.css'>
 
 <body>
-/*  git commit したよ */
 
 <?php
   function make_rptype(){
