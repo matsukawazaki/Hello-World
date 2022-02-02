@@ -3,27 +3,28 @@
 <link rel='stylesheet' href='style.css'>
 
 <body>
+/* ブラウザ上で編集してみた */
 <?php
-  function make_rptype(){  // inputField1
-    $str = "<label>rp_typeSelect</label>";
+  function make_rptype(){
+    $str = "<label>種類</label>";
     $str = $str . "<select id='rp_typeSelect'><option>通常</option><option>頓服</option></select>";
     echo $str;
   }
   
   function make_rp1(){
-    $str = "<label>rp1</label>";
+    $str = "<label>Rp1</label>";
     $str = $str . "<select id='rp1'><option>1</option><option>2</option></select>";
     echo $str;
   }
   
   function make_rp2(){
-    $str = "<label>rp2</label>";
+    $str = "<label>Rp2</label>";
     $str = $str . "<select id='rp2'><option>1</option><option>2</option></select>";
     echo $str;
   }
 
   function make_checkbox(){
-    $str = "<input type='checkbox' id='check_m'><label for='check_m'>朝check_m</label>";
+    $str = "<input type='checkbox' id='check_m'><label for='check_m'>朝</label>";
     $str = $str . "<input type='checkbox' id='check_n'><label for='check_n'>昼</label>";
     $str = $str . "<input type='checkbox' id='check_a'><label for='check_a'>夕</label>";
     $str = $str . "<input type='checkbox' id='check_v'><label for='check_v'>眠前
@@ -43,7 +44,7 @@ function make_old($width){
 
 function make_timingTable($width){
     $str = "<table><tr id='check_division'>";
-    $str = $str . "<th><input type='checkbox' name='check_division' id='check_m' onchange='count_check();'><label for='check_m'>朝check_m,amount_d_m</label></th>";
+    $str = $str . "<th><input type='checkbox' name='check_division' id='check_m' onchange='count_check();'><label for='check_m'>朝</label></th>";
     $str = $str . "<th><input type='checkbox' name='check_division' id='check_n' onchange='count_check()'><label for='check_n'>昼</label></th>";
     $str = $str . "<th><input type='checkbox' name='check_division' id='check_a' onchange='count_check()'><label for='check_a'>夕</label></th>";
     $str = $str . "<th><input type='checkbox' name='check_division' id='check_v' onchange='count_check()'><label for='check_v'>眠前</label></th></tr>";
@@ -68,32 +69,44 @@ function make_timingTable($width){
         <td><?php make_rp2(); ?></td>
         <td></td>
       </tr>
-
       <tr id='rp_inputField2'>
-        <td><label>rp_drugRetrieve</label></td>
+        <td><label>薬剤検索</label></td>
         <td colspan='3'><input type='text' id='rp_drugRetrieve'></td>
       </tr>
-
       <tr id='rp_inputField3'>
-        <td><label>rp_drugSelect</label></td>
+        <td><label>薬剤</label></td>
         <td colspan='3'><select id='rp_drugSelect'><option>oranzapine</option></select></td>
-<!-- rp_drugSelect onChange時に inputField3 の状態を変化させる
-例えば、rp_type = tablet の時は/// とか rp_type = powder の時は/// など -->
-        <td><label>rp_amount,rp_type,rp_division</label></td>
+        <td><label>量</label></td>
         <td><input type='text' style='width:50px' id='rp_amount'></td>
-        <td><select id='rp_type'><option>mg</option></td>
-        <td><select id='rp_division'><option value='division_1'>１分服</option><option value='division_2'>２分服</option><option value='division_3'>３分服</option><option value='division_4'>４分服</option></select></td>
-        <td rowspan='2'><label>rp_days</label></td>
-        <td rowspan='2'><input type='text' style='width:50px' id='rp_days'><label>日分</label></td>
+        <td><select><option>mg</option></td>
+        <td><select id='select_division'><option value='division_1'>１分服</option><option value='division_2'>２分服</option><option value='division_3'>３分服</option><option value='division_4'>４分服</option></select></td>
+        <td rowspan='2'><label>日数</label></td>
+        <td rowspan='2'><input type='text' style='width:50px'><label>日分</label></td>
         <td><label>submit</label><input type='button' id='btn' value='add'></td>
       </tr>
-
       <tr id='rp_inputField4'>
-        <td><label>rp_comment</label></td>
-        <td colspan='3'><input type='text' id='rp_comment'></td>
+        <td><label>コメント</label></td>
+        <td colspan='3'><input type='text'></td>
         <td colspan='3'><?php make_timingTable(30); ?></td>
         <td colspan='2'></td>
       </tr>
+<!--
+/        <td><label id='label'><select id='rp_section'><option value='rp_normal'>通常</option><option value='rp_tmp'>臨時</option></select></label></td>
+/        <td><label>RP1</label><select id='rp1'></select></td>
+/        <td><label>RP2</label><select id='rp2'></select></td>
+/        <td><label>drug</label><input type='text' id='input1 -> rp_drugRetrieve'></td>
+/        <td><label>amount</label><input type='text' id='input2 -> rp_amount'></td>
+        <td><label>times</label><select id='rp_times'><option>1</option><option>2</option><option>3</option><option>4</option></select></td>
+        <td><label>timing</label><select id='rp_timing'></select></td>
+/        <td><label>submit</label><input type='button' id='btn' value='add'></td>
+      </tr>
+      <tr id='rp_inputField2'>
+        <td colspan="3"></td>
+        <td><select id='select_drugs'></select></td>
+        <td><label>コメント</label><input type='text' id='rp_option'></td>
+        <td><label>配分</label><input type='text' class='amounts'>-<input type='text' class='amounts'></td>
+      </tr>
+-->
     </table>
   </div>
 
@@ -107,7 +120,7 @@ function make_timingTable($width){
   var rp2 = document.getElementById('rp2');
   var input1 = document.getElementById('rp_drugRetrieve');
   var input2 = document.getElementById('rp_amount');
-  var rp_division = document.getElementById('rp_division');
+  var select_division = document.getElementById('select_division');
   var select_drugs = document.getElementById('rp_drugSelect');
   var check_division = document.getElementById('check_division');
   var check_m = document.getElementById('check_m');
@@ -189,7 +202,7 @@ function count_check(){
   } else {
     amount_d_v.classList.add('undisplay');
   }
-  rp_division.options[num-1].selected = true;
+  select_division.options[num-1].selected = true;
 }
 
 rp1.addEventListener('change',function(){
@@ -295,16 +308,7 @@ for ( var ii = 1; ii < Object.keys(obj_keys).length + 1; ii++) {
 
 // btn click時の動作
   btn.addEventListener('click',function(){
-// check_m と amount_d_m を用いて ???-???-???-??? を作る
-
-    var obj_2 = {
-      'drug_id':select_drugs.options[select_drugs.selectedIndex].value,
-      'drug':select_drugs.options[select_drugs.selectedIndex].innerText,
-      'amount':input2.value,
-      'type':rp_type.options[rp_type.selectedIndex].value,
-      'times':rp_times.options[rp_times.selectedIndex].value,
-      'division':
-    };
+    var obj_2 = {'drug_id':select_drugs.options[select_drugs.selectedIndex].value,'drug':select_drugs.options[select_drugs.selectedIndex].innerText,'amount':input2.value};
     if ( this.value == 'add' ) {
       var num_1 = rp1.value;
       var num_2 = rp2.value;
