@@ -27,3 +27,20 @@ create table prescription_2022(rp_id int AUTO_INCREMENT PRIMARY KEY,d_id int,p_i
 
 prescription.drugs
 	{1:{1:{drug:,amount:,unit:,times:,timing:,
+	--->  {0:{0:{drug:,amount:,unit:,times:,timing:,  2022/02/08
+drugs を object にする必要があるのか？ 配列でも良い？
+配列の場合データベースに登録できるのか？
+
+
+drug_type
+錠剤 1錠1X
+包剤 1包1X
+液剤 1包1X
+漢方 食前にチェックを入れる
+
+ピコスルファート
+イソジンガーグル
+座薬
+
+rp_drug:[1,"オランザピン","tab",5,"mg"]
+               |--> name only,no amount info for using as retrieve word
