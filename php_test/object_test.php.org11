@@ -9,11 +9,7 @@
     <label>remove</label><input type='button' value='remove' id='rp_repair'>
   </div>
   <div>
-    <table id='tbl_d'>
-    </table>
-    <table id='tbl_t'>
-    </table>
-    <table id='tbl_e'>
+    <table id='tbl'>
     </table>
     <table id='rp_inputField'>
       <tr id='rp_inputField1'>
@@ -521,54 +517,68 @@ function test(object){
 }
 
 // ??? ここから修正 obj の構造を変えたため
-function make_table(tbl,obj_type,obj_keys){
-  var object = obj[obj_type];
+function make_table(obj,obj_keys){
+  var tbl = document.getElementById('tbl');
+//  tbl.innerHTML = "<tr><th>RP1</th><th>RP2</th><th>type</th><th>" + obj_keys[1] + "</th><th>"+ obj_keys[2] + "</th></tr>";
   var str = "<tr><th>RP1</th><th>RP2</th>";
   for ( var i = 0; i < Object.keys(obj_keys).length; i++ ) {
     str += "<th>" + obj_keys[i+1] + "</th>";
   }
   str += "</tr>";
   tbl.innerHTML = str;
-  if ( Object.keys(object).length == 0 ) {
+// obj['d']
+  var obj_d = obj['d'];
+  if ( Object.keys(obj_d).length == 0 ) {
     var tr = document.createElement('tr');
     str = '<td></td><td>新規追加</td><td></td><td></td>';
     tr.innerHTML = str;
     tbl.appendChild(tr);
+// obj が存在する場合のコードがごっそり無くなってしまった！！
   } else {
-    for ( let i = 0; i < Object.keys(object).length; i++ ) {
-      for ( let l = 0; l < Object.keys(object[i]).length; l++ ) {
+    for ( let i = 0; i < Object.keys(obj_d).length; i++ ) {
+      for ( let l = 0; l < Object.keys(obj_d[i]).length; l++ ) {
         var tr = document.createElement('tr');
         if ( l == 0 ) {  // Rp2 の 一番上の空白の行
-          var str1 = '<td rowspan="' + (Object.keys(object[i]).length + 1 )  + '">' + (i+1) + '</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
+          var str1 = '<td rowspan="' + (Object.keys(obj_d[i]).length + 1 )  + '">' + (i+1) + '</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
           var tr1 = document.createElement('tr');
           tr1.innerHTML = str1;
           tbl.appendChild(tr1);
           var str = '<td>' + (l+1) + '</td>';
           for ( var ii = 0; ii < Object.keys(obj_keys).length; ii++) {
-            str = make_table_ii(obj_type,str,i,l,ii);
+//          str += '<td>' + obj_d[i][l][obj_keys[ii]] + '</td>';
+            str = make_table_ii('d',str,i,l,ii);
           }
         //make_table_ii();
         } else {  // Rp2 の薬の表示のための for loop
           var str = '<td>' + (l+1) + '</td>';
           for ( var ii = 0; ii < Object.keys(tbl_obj_keys).length; ii++) {
-            str = make_table_ii(obj_type,str,i,l,ii);
+            str = make_table_ii('d',str,i,l,ii);
           }
         }
         tr.id = i + '_' + l;
+// 以下は ２個目の for loop の内部
+//  この中に修正点あり
         tr.addEventListener('click',function(){
           tmp_field.classList.remove('undisplay');
 //          tr.classList.add('pikapika');  // click中の要素がわかるように光らせる
-          var table_elems = tbl_t.rows;
+          var table_elems = tbl.rows;
           for ( var k = 0; k < table_elems.length; k++) {
             table_elems[k].classList.remove('pikapika');
           }
           var pikapika_id = i + '_' + l;
           var pikapika = document.getElementById(pikapika_id);
-//          pikapika.classList.add('pikapika');
-          this.classList.add('pikapika');
-console.log("this = " + this);
+          pikapika.classList.add('pikapika');
+// この中で rp_repair に addEventListener を付けると
+// make_table() がどんどん入れ子になっていき複雑化する
+// repair_obj() については、外部でaddEventListenerして
+// 外部で make_table() して新たにtableを作り直した方が良さそう
+// その場合、必要な情報(rp1,rp2)だけを rp_repair に渡せば良いと思われる。
+//          rp_repair.addEventListener('click',function repair_obj(){});
+console.log("i+1 = " + (i+1));
+console.log(i+1);
+// ???
 // ここにmake_selectを入れてclick時はremoveとrepairのみ表示されるようにする
-          make_repair_select(i+1,l+1,object[i][l]);
+          make_repair_select(i+1,l+1,obj_d[i][l]);
           tmp_rp1.innerText = (i+1);
           tmp_rp2.innerText = (l+1);
         });
@@ -583,8 +593,6 @@ console.log("this = " + this);
       }
     }
   }
-}
-function make_table_t(){
 // obj['t'] ????
 console.log("obj['d'] = " + JSON.stringify(obj['d']));
   var obj_t = obj['t'];
@@ -596,7 +604,7 @@ console.log("obj['d'] = " + JSON.stringify(obj['d']));
           var str1 = '<td rowspan="' + (Object.keys(obj_t[i]).length + 1 )  + '">' + (num_t+i+1) + '</td><td></td><td></td><td></td>';
           var tr1 = document.createElement('tr');
           tr1.innerHTML = str1;
-          tbl_t.appendChild(tr1);
+          tbl.appendChild(tr1);
           var str = '<td>' + (l+1) + '</td>';
           for ( var ii = 0; ii < Object.keys(obj_keys).length; ii++) {
 //          str += '<td>' + obj_t[i][l][obj_keys[ii]] + '</td>';
@@ -615,14 +623,13 @@ console.log("obj['d'] = " + JSON.stringify(obj['d']));
         tr.addEventListener('click',function(){
           tmp_field.classList.remove('undisplay');
 //          tr.classList.add('pikapika');  // click中の要素がわかるように光らせる
-          var table_elems = tbl_t.rows;
+          var table_elems = tbl.rows;
           for ( var k = 0; k < table_elems.length; k++) {
             table_elems[k].classList.remove('pikapika');
           }
           var pikapika_id = i + '_' + l;
           var pikapika = document.getElementById(pikapika_id);
-//          pikapika.classList.add('pikapika');
-          this.classList.add('pikapika');
+          pikapika.classList.add('pikapika');
 // この中で rp_repair に addEventListener を付けると
 // make_table() がどんどん入れ子になっていき複雑化する
 // repair_obj() については、外部でaddEventListenerして
@@ -644,7 +651,7 @@ console.log(i+1);
           this.classList.remove('mouseover');
         });
         tr.innerHTML = str;
-        tbl_t.appendChild(tr);
+        tbl.appendChild(tr);
       }
   }
 }
@@ -676,7 +683,7 @@ console.log("rp1&rp2 = " + rp1 + " & " + rp2);
     } 
   }
 console.log("removed obj_1 = " + JSON.stringify(obj_1)); 
-  make_table(tbl_d,'d',tbl_obj_keys);
+  make_table(obj,tbl_obj_keys);
 }
 
 function remove_obj_old(i,l){
@@ -870,8 +877,7 @@ console.log("obj_d = " + JSON.stringify(object));
 
 // init
   make_select(1,obj['d']);
-  make_table(tbl_d,'d',tbl_obj_keys);
-  make_table(tbl_t,'t',tbl_obj_keys);
+  make_table(obj,tbl_obj_keys);
 
 // now2
   rp_drugRetrieve.addEventListener('keypress',function(e){
@@ -896,8 +902,7 @@ console.log("btn_remove was called");
 console.log("btn_remove this.value = " + this.value);
       make_obj(this.value);
       make_select(rp1.value,obj['d']);
-      make_table(tbl_d,obj['d'],tbl_obj_keys);
-      make_table(tbl_t,obj['t'],tbl_obj_keys);
+      make_table(obj,tbl_obj_keys);
       btn_add.classList.remove('undisplay');
       btn_above.classList.remove('undisplay');
       btn_below.classList.remove('undisplay');
@@ -928,7 +933,7 @@ console.log("btn_repair this.value = " + this.value);
 
   btn_cancel.addEventListener('click',function(){
     make_select(1,obj['d']);
-    make_table(tbl_d,obj['d'],tbl_obj_keys);
+    make_table(obj,tbl_obj_keys);
       btn_add.classList.remove('undisplay');
       btn_above.classList.remove('undisplay');
       btn_below.classList.remove('undisplay');
@@ -946,8 +951,7 @@ console.log("btn_repair this.value = " + this.value);
     make_obj(method);  // this.value でいける？
     make_select(rp1.value,obj['d']);
     rp_type.options[0].selected = true;
-    make_table(tbl_d,'d',tbl_obj_keys);
-    make_table(tbl_t,'t',tbl_obj_keys);
+    make_table(obj,tbl_obj_keys);
     }
   });
 </script>
