@@ -1,8 +1,24 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <meta charset='UTF-8'>
 <link rel='stylesheet' href='style.css'>
 
 <body>
+<div id='header'>
+  <label> 日付 </label>
+    <strong id='register_date'><?php echo date("Ymd"); ?></strong>
+  <label> 患者ID </label>
+    <strong><?php echo $_SESSION['patiant']['karte_id']; ?></strong>
+  <label style='display:undisplay' id='register_p_id'><?php echo $_SESSION['patiant']['p_id']; ?></label>
+  <label> 患者氏名 </label>
+    <strong><?php echo $_SESSION['patiant']['kanji_f_name'] . ' ' . $_SESSION['patiant']['kanji_l_name'] ?></strong>
+  <label> 医師 </label>
+    <strong id='register_d_id'><?php echo $_SESSION['doctor']['d_id'] ?></strong></br>
+  <label> 過去の処方 </label>
+    <select></select>
+  <label> 登録 </label>
+    <input type='button' value='登録' id='btn_register'>
+</div>
 
   <div id='tmp_field' class='undisplay'>
     <label>repair</label><label>RP1</label><label id="tmp_rp1"></label><label>RP2</label><label id="tmp_rp2"></label><input type='button' value='remove' id='rp_repair' onclick='remove_obj();'>
@@ -203,6 +219,7 @@ function make_timingTable($width){
         'l':{0:{0:'p',1:'包'}},
         'lx':{0:{0:'mg',1:'mg'},1:{0:'ml',1:'ml'}}
                        };
+  var obj_drug_type = {'d':'0','t':'1','e':'2'};
 
 /* functions
 db_access : データベースにアクセスする関数
@@ -222,6 +239,14 @@ function db_access(type,str){
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4 ) {
       if (xhr.status == 200 ) {
+if ( type == 'register' ) {
+  var res = xhr.responseText;
+  if ( res == 0 ) {
+    console.log("register OK!");
+  } else {
+    console.log("register MISS!");
+  }
+} else {
         var res = xhr.responseText;
 console.log("res = " + res);
         res = JSON.parse(res);
@@ -233,20 +258,28 @@ console.log("res = " + res);
           select.innerText = res[i]['drug_name'];  // drug_info
           select_drugs.appendChild(select);
         }
+// rp_type を再指定したい場合は db_access の後に行わないとこちらの指定が反映されてしまう
         if ( res[0]['drug_type'] == 'p' ) {
           rp_type.options[2].selected = true;
-        } else if ( res[0]['drug_type'] == 't' ) {
+        } /*  else if ( res[0]['drug_type'] == 't' ) {
           rp_type.options[0].selected = true;
-        }
+        } */
         make_rp_unit();
         return res;
 //        break;
       }
+}
     }
   }
-  var xhr_get = 'php/db_search.php?sql_str="' + str + '"';
-  xhr.open('GET', xhr_get);
-  xhr.send(null);
+  if ( type == 'register' ) {
+    var xhr_get = 'php/db_register.php?sql_str="' + str + '"';
+    xhr.open('GET', xhr_get);
+    xhr.send(null);
+  } else {
+    var xhr_get = 'php/db_search.php?sql_str="' + str + '"';
+    xhr.open('GET', xhr_get);
+    xhr.send(null);
+  }
 }
 
 
@@ -388,7 +421,9 @@ function make_rp_unit(){
 console.log(obj_drug_types['t'][i][0]);
 console.log(obj_drug_types['t'][i][1]);
     }
-    rp_type.options[0].selected = true;
+//    rp_type.options[0].selected = true;
+  } else if (rp_drugSelect.options[rp_drugSelect.options.selectedIndex].value.split('_')[2] == 'p' ) {
+    rp_type.options[2].selected = true;
   }
 }  
 
@@ -451,7 +486,7 @@ function make_select(rp1_num,obj){ // rp1,rp2 を作るfunction
   }
 }
 
-function make_repair_select(num_1,num_2,obj_2){
+function make_repair_select(num_1,num_2,obj_2,type_obj){ // tr click時のみ使用
   rp1.innerHTML = '';
   rp2.innerHTML = '';
   var option1 = document.createElement('option');
@@ -557,18 +592,16 @@ function make_table(tbl,obj_type,obj_keys){
         tr.id = i + '_' + l;
         tr.addEventListener('click',function(){
           tmp_field.classList.remove('undisplay');
-//          tr.classList.add('pikapika');  // click中の要素がわかるように光らせる
-          var table_elems = tbl_t.rows;
-          for ( var k = 0; k < table_elems.length; k++) {
-            table_elems[k].classList.remove('pikapika');
-          }
+remove_pikapika();
           var pikapika_id = i + '_' + l;
           var pikapika = document.getElementById(pikapika_id);
-//          pikapika.classList.add('pikapika');
           this.classList.add('pikapika');
 console.log("this = " + this);
 // ここにmake_selectを入れてclick時はremoveとrepairのみ表示されるようにする
-          make_repair_select(i+1,l+1,object[i][l]);
+          make_repair_select(i+1,l+1,object[i][l],obj_type);
+console.log("type = " + obj_drug_type[obj_type]);
+// 引数に rp_type を指定する
+          make_rp_type(obj_drug_type[obj_type]);
           tmp_rp1.innerText = (i+1);
           tmp_rp2.innerText = (l+1);
         });
@@ -649,51 +682,6 @@ console.log(i+1);
   }
 }
 
-function remove_obj(){
-  var rp1 = tmp_rp1.innerText;
-  var rp2 = tmp_rp2.innerText;
-console.log("rp1&rp2 = " + rp1 + " & " + rp2);
-  var obj_1 = obj['d'];
-  var obj_len = Object.keys(obj_1).length;
-  var obj_i_len = Object.keys(obj_1[rp1-1]).length;
-  if ( obj_len ==1 && obj_i_len == 1 ) {
-    obj_1 = {};
-  } else if ( obj_i_len == 1 ) {
-    for ( var ii = rp1-1; ii < obj_len; ii++ ) {
-      if ( ii == obj_len -1 ) {
-        delete obj_1[ii];
-      } else {
-        obj_1[rp1-1] = obj_1[rp1];
-      }
-    }
-  } else {
-    for ( var ll = rp2-1; ll < obj_i_len; ll++ ) {
-      if ( ll ==  obj_i_len -1 ) {
-        delete obj_1[rp1-1][ll];
-      } else {
-        obj_1[rp1-1][ll] = obj_1[rp1-1][ll+1];
-      }
-    } 
-  }
-console.log("removed obj_1 = " + JSON.stringify(obj_1)); 
-  make_table(tbl_d,'d',tbl_obj_keys);
-}
-
-function remove_obj_old(i,l){
-      var num_1 = i;
-      var num_2 = l;
-      var obj_1 = obj['d'];
-      if ( obj_1[num_1] ) {
-        if ( obj_1[num_1][num_2] ) {
-          var num_obj = Object.keys(obj_1[num_1]).length;
-          for ( let v = 1; v < (num_2 - 1); v++ ) {
-            obj_1[num_1][i] = obj_1[num_1][i+1];
-          }
-        }
-        delete obj_1[num_1][num_obj];
-      }
-}
-
 function make_table_ii(type,str,i,l,ii){
 // var tbl_obj_keys = {1:'drug_type',2:'tbl_drug',3:'tbl_amount',4:'tbl_unit',5:'tbl_times',6:'tbl_division',7:'tbl_before',8:'tbl_option',9:'tbl_days'};
 var object = obj[type];
@@ -747,6 +735,18 @@ if ( object[i][l]['rp_before'] == 0 ) {
   return str;
 }
 
+function remove_pikapika(){
+  for ( var i = 0; i < 3; i++ ) {
+      var tbl_id = "tbl_" + Object.keys(obj_drug_type)[i];
+      console.log("table_id = " + tbl_id);
+      var rp_table = document.getElementById(tbl_id);
+      var table_elems = rp_table.rows;
+      for ( var k = 0; k < table_elems.length; k++) {
+        table_elems[k].classList.remove('pikapika');
+      }
+  }
+}
+
 function subustitusion(obj,rp1,rp2){
   
 }
@@ -779,6 +779,12 @@ function make_obj(method){
     } else {
       var obj_2_rp_unit = drug_info[2];
     }
+var rp_change;
+if ( method == 'add' ) {
+      rp_change = 'a';
+} else if ( method == 'repair' ) {
+      rp_change = 'r';
+}
     var obj_2 = {
       'rp_type':rp_type.options[rp_type.selectedIndex].value,
 //      'rp_drug_id':drug_info[0],
@@ -791,7 +797,8 @@ function make_obj(method){
       'rp_division':amount_str,    // 200-200-100-200
       'rp_before':before,  //rp_before,
       'rp_option':rp_option.value,
-      'rp_days':rp_days.value  //rp_days
+      'rp_days':rp_days.value,  //rp_days
+      'rp_change':rp_change,
     };
 console.log("this.value = " + this.value);
 // ここは関数にしたいところ！！
@@ -800,20 +807,6 @@ console.log("this.value = " + this.value);
       var num_2 = rp2.value;
 if ( rp_type.options[rp_type.selectedIndex].value == 0 ) {
       add_obj(obj_d,obj_2,num_1,num_2);
-/*      if ( obj_d[num_1-1] ) {
-        if ( obj_d[num_1-1][num_2-1] ) {
-          var num_obj = Object.keys(obj_d[num_1-1]).length;
-          for ( let i = num_obj; i > (num_2 - 2); i-- ) {
-            obj_d[num_1-1][i] = obj_d[num_1-1][i-1];
-          }
-        }
-        obj_d[num_1-1][num_2-1] = obj_2;
-console.log("obj_d(add) = " + JSON.stringify(obj_d));
-      } else {
-        obj_d[num_1-1] = {};
-        obj_d[num_1-1][num_2-1] = obj_2;
-console.log("obj_d = " + JSON.stringify(obj_d));
-      } */
 } else if ( rp_type.options[rp_type.selectedIndex].value == 1 ) {
       add_obj(obj_t,obj_2,num_1,num_2);
 }
@@ -822,31 +815,13 @@ console.log("obj_d = " + JSON.stringify(obj_d));
       var num_2 = rp2.value;
       obj_d[num_1-1][num_2-1] = obj_2;
     } else if ( method == 'remove' ) {
-console.log("remove was called!");
       var num_1 = rp1.value;
       var num_2 = rp2.value;
-      var obj_len = Object.keys(obj_d).length;
-console.log("obj_len = " + obj_len);
-      var obj_i_len = Object.keys(obj_d[num_1-1]).length;
-      if ( obj_len ==1 && obj_i_len == 1 ) {
-        obj_d = {};
-      } else if ( obj_i_len == 1 ) {
-        for ( var ii = num_1-1; ii < obj_len; ii++ ) {
-          if ( ii == obj_len -1 ) {
-            delete obj_d[ii];
-          } else {
-            obj_d[num_1-1] = obj_d[num_1];
-          }
-        }
-      } else {
-        for ( var ll = num_2-1; ll < obj_i_len; ll++ ) {
-          if ( ll ==  obj_i_len -1 ) {
-            delete obj_d[num_1-1][ll];
-          } else {
-            obj_d[num_1-1][ll] = obj_d[num_1-1][ll+1];
-          }
-        } 
-      }
+if ( rp_type.options[rp_type.selectedIndex].value == 0 ) {
+      remove_obj('d',num_1,num_2);
+} else if ( rp_type.options[rp_type.selectedIndex].value == 1 ) {
+      remove_obj('t',num_1,num_2);
+}
     }
 console.log("obj = " + JSON.stringify(obj));
 }
@@ -868,6 +843,39 @@ console.log("obj_d = " + JSON.stringify(object));
   }
 }
 
+function remove_obj(type_obj,num_1,num_2){
+      var removeObj = obj[type_obj];
+console.log("remove was called!");
+console.log("removeObj = " + JSON.stringify(removeObj));
+      var obj_len = Object.keys(removeObj).length;
+if ( removeObj[num_1-1] ) {
+      var obj_i_len = Object.keys(removeObj[num_1-1]).length;
+}
+      if ( obj_len == 0 ) {
+console.log("obj is empty! anything is error!");
+      } else if ( obj_len ==1 && obj_i_len == 1 ) {
+        removeObj = {};
+      } else if ( obj_i_len == 1 ) {
+        for ( var ii = num_1-1; ii < obj_len; ii++ ) {
+          if ( ii == obj_len -1 ) {
+            delete removeObj[ii];
+          } else {
+            removeObj[num_1-1] = removeObj[num_1];
+          }
+        }
+      } else {
+        for ( var ll = num_2-1; ll < obj_i_len; ll++ ) {
+          if ( ll ==  obj_i_len -1 ) {
+            delete removeObj[num_1-1][ll];
+          } else {
+            removeObj[num_1-1][ll] = removeObj[num_1-1][ll+1];
+          }
+        } 
+      }
+      obj[type_obj] = removeObj;
+console.log("removeObj = " + JSON.stringify(removeObj));
+}
+
 // init
   make_select(1,obj['d']);
   make_table(tbl_d,'d',tbl_obj_keys);
@@ -886,6 +894,15 @@ console.log("obj_d = " + JSON.stringify(object));
     }
   });
 
+function make_rp_type(type_obj){
+//  var HTML = "<option value='0'>通常</option><option value='1'>頓服</option><option value='2'>その他</option>";
+//  rp_type.innerHTML = HTML;
+console.log("type_obj in make_rp_type is = " + type_obj);
+  if ( type_obj ) {
+    rp_type.options[type_obj].selected = true;
+  }
+}
+
 // btn click時の動作
   btn_remove.addEventListener('click',function(event){
     if ( obj_check() == 1 ) {
@@ -896,8 +913,8 @@ console.log("btn_remove was called");
 console.log("btn_remove this.value = " + this.value);
       make_obj(this.value);
       make_select(rp1.value,obj['d']);
-      make_table(tbl_d,obj['d'],tbl_obj_keys);
-      make_table(tbl_t,obj['t'],tbl_obj_keys);
+    make_table(tbl_d,'d',tbl_obj_keys);
+    make_table(tbl_t,'t',tbl_obj_keys);
       btn_add.classList.remove('undisplay');
       btn_above.classList.remove('undisplay');
       btn_below.classList.remove('undisplay');
@@ -916,7 +933,8 @@ console.log("btn_repair was called");
 console.log("btn_repair this.value = " + this.value);
       make_obj(this.value);
       make_select(rp1.value,obj['d']);
-      make_table(obj,tbl_obj_keys);
+    make_table(tbl_d,'d',tbl_obj_keys);
+    make_table(tbl_t,'t',tbl_obj_keys);
       btn_add.classList.remove('undisplay');
       btn_above.classList.remove('undisplay');
       btn_below.classList.remove('undisplay');
@@ -928,7 +946,8 @@ console.log("btn_repair this.value = " + this.value);
 
   btn_cancel.addEventListener('click',function(){
     make_select(1,obj['d']);
-    make_table(tbl_d,obj['d'],tbl_obj_keys);
+    make_table(tbl_d,'d',tbl_obj_keys);
+    make_table(tbl_t,'t',tbl_obj_keys);
       btn_add.classList.remove('undisplay');
       btn_above.classList.remove('undisplay');
       btn_below.classList.remove('undisplay');
@@ -949,6 +968,21 @@ console.log("btn_repair this.value = " + this.value);
     make_table(tbl_d,'d',tbl_obj_keys);
     make_table(tbl_t,'t',tbl_obj_keys);
     }
+  });
+
+  btn_register.addEventListener('click',function(){
+    var type = 'register';
+    var d_id = register_d_id.innerText;
+    var p_id = register_p_id.innerText;
+    var date = register_date.innerText;
+    var drugs = JSON.stringify(obj);
+    var str = "insert into prescription_2022 values(null,";
+    str += d_id + ",";
+    str += p_id + ",";
+    str += date + ",'";
+    str += drugs + "')";
+console.log("str = " + str);
+    db_access(type,str);
   });
 </script>
 
